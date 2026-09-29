@@ -3,6 +3,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const cookieBtn = document.getElementById('cookie-btn');
   const resetBtn = document.getElementById('reset-btn');
 
+  const SECRET_SALT = 'c00k13_cl1ck3r_s3cr3t_s4lt_2025';
+
+  // Simple string hash for cookie integrity checking
+  function computeHash(val) {
+    let hash = 0;
+    const str = `${val}:${SECRET_SALT}`;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash |= 0; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(36);
+  }
+
   function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -17,16 +31,40 @@ document.addEventListener('DOMContentLoaded', () => {
     document.cookie = `${name}=${value};${expires};path=/;SameSite=Lax`;
   }
 
-  // Load persisted count from browser cookie
-  const savedCookieCount = getCookie('cookieClicks');
-  let count = parseInt(savedCookieCount || '0', 10);
-  if (isNaN(count)) count = 0;
+  function loadSecureCount() {
+    const rawVal = getCookie('cookieClicks');
+    const signature = getCookie('cookieSig');
+
+    if (!rawVal) return 0;
+
+    const count = parseInt(rawVal, 10);
+    if (isNaN(count) || count < 0) return 0;
+
+    // Verify cookie integrity signature
+    const expectedSig = computeHash(count);
+    if (signature !== expectedSig) {
+      console.warn('Cookie tampering detected! Count has been reset.');
+      saveSecureCount(0);
+      return 0;
+    }
+
+    return count;
+  }
+
+  function saveSecureCount(newCount) {
+    const sig = computeHash(newCount);
+    setCookie('cookieClicks', newCount, 365);
+    setCookie('cookieSig', sig, 365);
+  }
+
+  // Load initial validated count
+  let count = loadSecureCount();
   clickCountEl.textContent = count;
 
   function incrementCount(e) {
     count++;
     clickCountEl.textContent = count;
-    setCookie('cookieClicks', count, 365);
+    saveSecureCount(count);
 
     createFloatingText(e);
   }
@@ -68,6 +106,39 @@ document.addEventListener('DOMContentLoaded', () => {
   resetBtn.addEventListener('click', () => {
     count = 0;
     clickCountEl.textContent = count;
-    setCookie('cookieClicks', 0, 365);
+    saveSecureCount(0);
+  });
+
+  // --- Client-side anti-tampering & Developer Tools Prevention ---
+
+  // Disable right-click context menu
+  document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+  });
+
+  // Prevent developer tool shortcuts
+  document.addEventListener('keydown', (e) => {
+    // F12
+    if (e.key === 'F12') {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+
+    // Ctrl+Shift+I / Cmd+Option+I (Inspect)
+    // Ctrl+Shift+J / Cmd+Option+J (Console)
+    // Ctrl+Shift+C / Cmd+Option+C (Inspect Element)
+    // Ctrl+U / Cmd+Option+U (View Source)
+    if (
+      (e.ctrlKey || e.metaKey) &&
+      (e.shiftKey || e.altKey || e.key.toLowerCase() === 'u')
+    ) {
+      const key = e.key.toLowerCase();
+      if (['i', 'j', 'c', 'u'].includes(key)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    }
   });
 });
