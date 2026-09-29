@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const clickCountEl = document.getElementById('click-count');
   const cookieBtn = document.getElementById('cookie-btn');
   const resetBtn = document.getElementById('reset-btn');
+  const trophyCards = document.querySelectorAll('.trophy-card');
 
   const SECRET_SALT = 'c00k13_cl1ck3r_s3cr3t_s4lt_2025';
 
@@ -29,6 +30,19 @@ document.addEventListener('DOMContentLoaded', () => {
     date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
     const expires = `expires=${date.toUTCString()}`;
     document.cookie = `${name}=${value};${expires};path=/;SameSite=Lax`;
+  }
+
+  function updateAchievements(currentCount) {
+    trophyCards.forEach(card => {
+      const threshold = parseInt(card.getAttribute('data-threshold'), 10);
+      if (currentCount >= threshold) {
+        card.classList.remove('locked');
+        card.classList.add('unlocked');
+      } else {
+        card.classList.remove('unlocked');
+        card.classList.add('locked');
+      }
+    });
   }
 
   function loadSecureCount() {
@@ -60,11 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load initial validated count
   let count = loadSecureCount();
   clickCountEl.textContent = count;
+  updateAchievements(count);
 
   function incrementCount(e) {
     count++;
     clickCountEl.textContent = count;
     saveSecureCount(count);
+    updateAchievements(count);
 
     createFloatingText(e);
   }
@@ -107,6 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
     count = 0;
     clickCountEl.textContent = count;
     saveSecureCount(0);
+    updateAchievements(count);
   });
 
   // --- Client-side anti-tampering & Developer Tools Prevention ---
