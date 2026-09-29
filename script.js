@@ -17,16 +17,33 @@ document.addEventListener('DOMContentLoaded', () => {
     document.cookie = `${name}=${value};${expires};path=/;SameSite=Lax`;
   }
 
+  const trophyCards = document.querySelectorAll('.trophy-card');
+
+  function updateAchievements(currentCount) {
+    trophyCards.forEach(card => {
+      const threshold = parseInt(card.getAttribute('data-threshold'), 10);
+      if (currentCount >= threshold) {
+        card.classList.remove('locked');
+        card.classList.add('unlocked');
+      } else {
+        card.classList.remove('unlocked');
+        card.classList.add('locked');
+      }
+    });
+  }
+
   // Load persisted count from browser cookie
   const savedCookieCount = getCookie('cookieClicks');
   let count = parseInt(savedCookieCount || '0', 10);
   if (isNaN(count)) count = 0;
   clickCountEl.textContent = count;
+  updateAchievements(count);
 
   function incrementCount(e) {
     count++;
     clickCountEl.textContent = count;
     setCookie('cookieClicks', count, 365);
+    updateAchievements(count);
 
     createFloatingText(e);
   }
@@ -69,5 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
     count = 0;
     clickCountEl.textContent = count;
     setCookie('cookieClicks', 0, 365);
+    updateAchievements(count);
   });
 });
