@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cookie Clicker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #fef6e4 0%, #f3d2b3 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #001e1d;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      max-width: 90vw;
+      width: 360px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0d2c54;
+      margin-bottom: 0.5rem;
+    }
+
+    .counter-display {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #f26419;
+      letter-spacing: 1px;
+    }
+
+    .cookie-wrapper {
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+      transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .cookie-wrapper:hover {
+      transform: scale(1.05);
+    }
+
+    .cookie-wrapper:active {
+      transform: scale(0.95);
+    }
+
+    .cookie-svg {
+      width: 180px;
+      height: 180px;
+      filter: drop-shadow(0 10px 15px rgba(100, 50, 0, 0.2));
+    }
+
+    .reset-btn {
+      margin-top: 0.5rem;
+      padding: 8px 16px;
+      background: #e76f51;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease;
+    }
+
+    .reset-btn:hover {
+      background: #d65a3b;
+      transform: translateY(-1px);
+    }
+
+    .reset-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* Floating +1 animation */
+    .floating-text {
+      position: absolute;
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: #e76f51;
+      pointer-events: none;
+      animation: floatUp 0.8s ease-out forwards;
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -60px) scale(1.2);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Cookie Clicker</h1>
+
+    <div class="counter-display">
+      <span id="click-count">0</span>
+    </div>
+
+    <div class="cookie-wrapper" id="cookie-btn" aria-label="Click the cookie" role="button" tabindex="0">
+      <svg class="cookie-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <!-- Main Cookie Body -->
+        <circle cx="100" cy="100" r="90" fill="#d4a373" stroke="#bc8a5f" stroke-width="6"/>
+        <!-- Texture details -->
+        <circle cx="100" cy="100" r="82" fill="none" stroke="#ca9b6c" stroke-width="4" stroke-dasharray="10 15"/>
+
+        <!-- Chocolate Chips -->
+        <circle cx="60" cy="60" r="12" fill="#4a2c11"/>
+        <circle cx="135" cy="65" r="14" fill="#4a2c11"/>
+        <circle cx="100" cy="115" r="15" fill="#4a2c11"/>
+        <circle cx="150" cy="120" r="10" fill="#4a2c11"/>
+        <circle cx="65" cy="135" r="13" fill="#4a2c11"/>
+        <circle cx="100" cy="55" r="11" fill="#4a2c11"/>
+        <circle cx="130" cy="160" r="8" fill="#4a2c11"/>
+      </svg>
+    </div>
+
+    <button class="reset-btn" id="reset-btn">Reset Count</button>
+  </div>
+
+  <script>
+    const clickCountEl = document.getElementById('click-count');
+    const cookieBtn = document.getElementById('cookie-btn');
+    const resetBtn = document.getElementById('reset-btn');
+
+    // Load persisted count
+    let count = parseInt(localStorage.getItem('cookieClicks') || '0', 10);
+    if (isNaN(count)) count = 0;
+    clickCountEl.textContent = count;
+
+    function incrementCount(e) {
+      count++;
+      clickCountEl.textContent = count;
+      localStorage.setItem('cookieClicks', count.toString());
+
+      // Create floating +1 visual effect
+      createFloatingText(e);
+    }
+
+    function createFloatingText(e) {
+      const text = document.createElement('div');
+      text.className = 'floating-text';
+      text.textContent = '+1';
+
+      const rect = cookieBtn.getBoundingClientRect();
+      let x, y;
+
+      if (e && e.clientX && e.clientY) {
+        x = e.clientX - rect.left;
+        y = e.clientY - rect.top;
+      } else {
+        x = rect.width / 2;
+        y = rect.height / 2;
+      }
+
+      text.style.left = `${x}px`;
+      text.style.top = `${y}px`;
+
+      cookieBtn.appendChild(text);
+
+      setTimeout(() => {
+        text.remove();
+      }, 800);
+    }
+
+    cookieBtn.addEventListener('click', incrementCount);
+    cookieBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        incrementCount(e);
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      count = 0;
+      clickCountEl.textContent = count;
+      localStorage.setItem('cookieClicks', '0');
+    });
+  </script>
+</body>
+</html>
