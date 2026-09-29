@@ -148,64 +148,6 @@
     <button class="reset-btn" id="reset-btn">Reset Count</button>
   </div>
 
-  <script>
-    const clickCountEl = document.getElementById('click-count');
-    const cookieBtn = document.getElementById('cookie-btn');
-    const resetBtn = document.getElementById('reset-btn');
-
-    // Load persisted count
-    let count = parseInt(localStorage.getItem('cookieClicks') || '0', 10);
-    if (isNaN(count)) count = 0;
-    clickCountEl.textContent = count;
-
-    function incrementCount(e) {
-      count++;
-      clickCountEl.textContent = count;
-      localStorage.setItem('cookieClicks', count.toString());
-
-      // Create floating +1 visual effect
-      createFloatingText(e);
-    }
-
-    function createFloatingText(e) {
-      const text = document.createElement('div');
-      text.className = 'floating-text';
-      text.textContent = '+1';
-
-      const rect = cookieBtn.getBoundingClientRect();
-      let x, y;
-
-      if (e && e.clientX && e.clientY) {
-        x = e.clientX - rect.left;
-        y = e.clientY - rect.top;
-      } else {
-        x = rect.width / 2;
-        y = rect.height / 2;
-      }
-
-      text.style.left = `${x}px`;
-      text.style.top = `${y}px`;
-
-      cookieBtn.appendChild(text);
-
-      setTimeout(() => {
-        text.remove();
-      }, 800);
-    }
-
-    cookieBtn.addEventListener('click', incrementCount);
-    cookieBtn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        incrementCount(e);
-      }
-    });
-
-    resetBtn.addEventListener('click', () => {
-      count = 0;
-      clickCountEl.textContent = count;
-      localStorage.setItem('cookieClicks', '0');
-    });
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
